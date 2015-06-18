@@ -1,17 +1,36 @@
 library(googleVis)
 library(dplyr)
 
+source("./src/read.R")
+
+province.codes <- getProvinceCodes()
+province.codes <- select(province.codes, code, province)
+province.codes$province <- refineText(province.codes$province)
+
 data <- read.csv("./data/V02.01.csv", header = TRUE)
 names(data) <- c("province", "area.km2", "population", "density")
-province.codes <- read.csv("./data/vn_provinces_code.csv", header = FALSE)
-names(province.codes) <- c("iso3166.2", "province")
+data$province <- refineText(data$province)
 
-data <- merge(data, province.codes, by = c("province"))
+vietnam_population_distribution <- merge(data, 
+              province.codes, 
+              by = c("province"))
 
-geo <- gvisGeoChart(data, 
-                  locationvar = "iso3166.2", 
+write.csv(vietnam_population_distribution, "./data/merge_data.csv")
+geo.density <- gvisGeoChart(vietnam_population_distribution, locationvar = "code", 
                   colorvar = "density", hovervar = "province",
                   options = list(dataMode = "regions", resolution="provinces",
-                                 region = "VN", width=940, height=700)
+                                 region = "VN", width = 800, height = 600, backgroundColor="lightblue",
+                                 colorAxis = "{colors: ['red']}"),
+                  chartid = "VN_density"
                   )
-plot(geo)
+plot(geo.density)
+
+geo.population <- gvisGeoChart(vietnam_population_distribution, locationvar = "code", 
+                            colorvar = "population", hovervar = "province",
+                            options = list(dataMode = "regions", resolution="provinces",
+                                           region = "VN", width=940, height=700, backgroundColor="lightblue",
+                                           colorAxis = "{colors: ['red']}"),
+                            chartid = "VN_population"
+                            )
+plot(geo.population)
+
